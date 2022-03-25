@@ -7,7 +7,8 @@ defmodule Roller.MixProject do
       version: "0.1.0",
       elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      releases: releases()
     ]
   end
 
@@ -28,4 +29,18 @@ defmodule Roller.MixProject do
       {:rexbug, "~> 1.0"}
     ]
   end
+
+  defp releases do
+    [
+      prod: [
+        include_executables_for: [:unix],
+        config_providers: [
+          {TomlConfigProvider, "/app/config.toml"}
+        ],
+        steps: [:assemble, :tar],
+        path: "/app/release"
+      ]
+    ]
+  end
+
 end

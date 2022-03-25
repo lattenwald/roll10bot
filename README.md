@@ -1,21 +1,20 @@
 # Roller
 
-**TODO: Add description**
+## Build
 
-## Installation
+    ./build.sh
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `roller` to your list of dependencies in `mix.exs`:
+## Configure
 
-```elixir
-def deps do
-  [
-    {:roller, "~> 0.1.0"}
-  ]
-end
-```
+Put your bot token into `config.toml` (see example `config.toml.example`).
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/roller>.
+## Run
 
+    ./run.sh
+
+## Use
+
+It's an inline telegram bot. Call it in any chat just mentioning your bot (i.e. print `@roll10bot`) and wait for suggestion to roll plain d10, click it.
+Mention bot with dice number (i.e. `@roll10bot 5`) and click one of suggestions. Result is calculated by World of Darkness rules: 8, 9, 10 is a success, 1 is a failure.
+
+Bot talks Russian.

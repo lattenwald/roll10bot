@@ -66,9 +66,9 @@ defmodule Roller.Tgbot do
       case num > 50 or num < 1 do
       true -> plain_d10()
       false ->
-        [ inline_item(1, "roll #{num}d10", "10 again", roll(num, 10)),
-          inline_item(2, "roll #{num}d10", "9 again", roll(num, 9)),
-          inline_item(3, "roll #{num}d10", "8 again", roll(num, 8))
+        [ inline_item(1, "roll #{num}d10", "10 again", Roller.roll(num, 10)),
+          inline_item(2, "roll #{num}d10", "9 again", Roller.roll(num, 9)),
+          inline_item(3, "roll #{num}d10", "8 again", Roller.roll(num, 8))
         ]
     end
   end
@@ -90,46 +90,6 @@ defmodule Roller.Tgbot do
     }
   end
 
-  defp roll do
-    "plain `1d10` roll:\n *#{:rand.uniform(10)}*"
-  end
-
-  defp roll(count, again) do
-    results = roll(count, again, [])
-    results_text = results |> Enum.map(fn (r) ->
-      r |> Enum.map(&(if &1 >= 8, do: "*#{&1}*", else: "#{&1}")) |> Enum.join(", ")
-    end) |> Enum.reverse |> Enum.join("\n")
-
-    results_flat = List.flatten results
-
-    summary = case Enum.count(results_flat, &(&1 >= 8)) do
-      0 ->
-        case Enum.count(results_flat, &(&1 == 1)) do
-          0 -> ""
-          failure -> "*#{failure}* #{msg(failure, "провал", "провала", "провалов")}"
-        end
-      success -> "*#{success}* #{msg(success, "успех", "успеха", "успехов")}"
-    end
-    "`#{count}d10` #{again} again\n" <> results_text <> "\n" <> summary
-  end
-
-  defp plain_d10(), do: [inline_item(1, "roll 1d10", "plain", roll())]
-
-  defp roll(0, _, acc), do: acc
-  defp roll(count, again, acc) do
-    results = 1..count |> Enum.map(fn(_) -> :rand.uniform(10) end)
-    rerolls = Enum.count(results, &(&1 >= again))
-    roll(rerolls, again, [results | acc])
-  end
-
-  defp msg(num, a, b, c) do
-    cond do
-      num >= 20 -> msg(rem(num, 10), a, b, c)
-      num == 0 -> c
-      num == 1 -> a
-      num < 5 -> b
-      true -> c
-    end
-  end
+  def plain_d10(), do: [inline_item(1, "roll 1d10", "plain", Roller.roll())]
 
 end
