@@ -51,7 +51,7 @@ defmodule Roller.Tgbot do
   defp process(upd, _), do: process upd
 
   defp process(%{inline_query: %{id: query_id, query: ""}}) do
-    Nadia.answer_inline_query(query_id, [inline_item(1, "roll 1d10", "plain", roll())], [cache_time: 0])
+    Nadia.answer_inline_query(query_id, plain_d10(), [cache_time: 0])
   end
 
   defp process(%{inline_query: %{id: query_id, query: query}}) do
@@ -64,7 +64,7 @@ defmodule Roller.Tgbot do
 
   defp suggestions(num) when is_integer(num) do
       case num > 50 or num < 1 do
-      true -> []
+      true -> plain_d10()
       false ->
         [ inline_item(1, "roll #{num}d10", "10 again", roll(num, 10)),
           inline_item(2, "roll #{num}d10", "9 again", roll(num, 9)),
@@ -76,7 +76,7 @@ defmodule Roller.Tgbot do
   defp suggestions(str) do
     case Integer.parse(str) do
       {num, ""} -> suggestions(num)
-      {_, _} -> []
+      _ -> plain_d10()
     end
   end
 
@@ -112,6 +112,8 @@ defmodule Roller.Tgbot do
     end
     "`#{count}d10` #{again} again\n" <> results_text <> "\n" <> summary
   end
+
+  defp plain_d10(), do: [inline_item(1, "roll 1d10", "plain", roll())]
 
   defp roll(0, _, acc), do: acc
   defp roll(count, again, acc) do
