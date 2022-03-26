@@ -68,6 +68,18 @@ defmodule Roller.Tgbot do
   end
 
   ## callback queries
+  defp process(%{callback_query: %{data: "-" <> data, message: %{chat: %{id: chat_id}, message_id: message_id}}}) do
+    rows = 10 .. 8 |> Enum.map(
+      fn(again) ->
+        [%Nadia.Model.InlineKeyboardButton{
+          callback_data: "#{data}a#{again}",
+          text: "#{again} again"
+        }]
+      end
+    )
+    inline_keyboard = %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: rows}
+    Nadia.edit_message_text(chat_id, message_id, nil, "Roll `#{data}d10`", [parse_mode: "Markdown", reply_markup: inline_keyboard])
+  end
   defp process(%{callback_query: %{data: data, message: %{chat: %{id: chat_id}, message_id: message_id}}}) do
     with {num, again} <- parse_num_again(data) do
       text = Roller.roll(num, again)
@@ -98,13 +110,13 @@ defmodule Roller.Tgbot do
       Nadia.send_message(chat_id, Roller.roll(num, again), [reply_to_message_id: message_id, parse_mode: "Markdown"])
     else
       _ ->
-        rows = 10 .. 9 |> Enum.map(
-          fn(again) ->
-            4 .. 6 |> Enum.map(
+        rows = [2, 5, 8] |> Enum.map(
+          fn(start) ->
+            start .. start+2 |> Enum.map(
               fn(num) ->
                 %Nadia.Model.InlineKeyboardButton{
-                  callback_data: "#{num}a#{again}",
-                  text: "#{num}" <> (if again != 10, do: "-#{again}", else: "")
+                  callback_data: "-#{num}",
+                  text: "#{num}"
                 }
               end
             )
