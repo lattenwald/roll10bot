@@ -50,16 +50,44 @@ defmodule Roller.Tgbot do
   end
   defp process(upd, _), do: process upd
 
+  ## commands
+  defp process(%{message: %{text: "/id", chat: %{id: chat_id}, message_id: message_id}}) do
+    Nadia.send_message(chat_id, "`#{chat_id}`", [reply_to_message_id: message_id, parse_mode: "Markdown"])
+  end
+  defp process(%{message: %{text: "/roll8" <> rest, chat: %{id: chat_id}, message_id: message_id}}) do
+    process_roll_command(chat_id, message_id, rest, 8)
+  end
+  defp process(%{message: %{text: "/roll9" <> rest, chat: %{id: chat_id}, message_id: message_id}}) do
+    process_roll_command(chat_id, message_id, rest, 9)
+  end
+  defp process(%{message: %{text: "/roll" <> rest, chat: %{id: chat_id}, message_id: message_id}}) do
+    process_roll_command(chat_id, message_id, rest, 10)
+  end
+  defp process(%{message: %{text: "/plain", chat: %{id: chat_id}, message_id: message_id}}) do
+    Nadia.send_message(chat_id, Roller.roll(), [reply_to_message_id: message_id, parse_mode: "Markdown"])
+  end
+
+  ## inline queries
   defp process(%{inline_query: %{id: query_id, query: ""}}) do
     Nadia.answer_inline_query(query_id, plain_d10(), [cache_time: 0])
   end
-
   defp process(%{inline_query: %{id: query_id, query: query}}) do
     Nadia.answer_inline_query(query_id, suggestions(query), [cache_time: 0])
   end
 
+  ## other
   defp process(upd) do
     IO.inspect(upd)
+  end
+
+  ## helpers
+  defp process_roll_command(chat_id, message_id, str, again) do
+    with " " <> str_num  <- str,
+         {num, ""} <- str_num |> String.trim |> Integer.parse do
+      Nadia.send_message(chat_id, Roller.roll(num, again), [reply_to_message_id: message_id, parse_mode: "Markdown"])
+    else
+      _ -> Nadia.send_message(chat_id, "what?", [reply_to_message_id: message_id, parse_mode: "Markdown"])
+    end
   end
 
   defp suggestions(num) when is_integer(num) do
