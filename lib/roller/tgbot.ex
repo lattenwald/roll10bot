@@ -67,6 +67,17 @@ defmodule Roller.Tgbot do
     Nadia.send_message(chat_id, Roller.roll(), [reply_to_message_id: message_id, parse_mode: "Markdown"])
   end
 
+  ## callback queries
+  defp process(%{callback_query: %{data: data, message: %{chat: %{id: chat_id}, message_id: message_id}}}) do
+    with {num, again} <- parse_num_again(data) do
+      text = Roller.roll(num, again)
+      # Nadia.edit_message_reply_markup(chat_id, message_id, nil, [])
+      Nadia.edit_message_text(chat_id, message_id, nil, text, [parse_mode: "Markdown"])
+    else
+      _ -> :ok
+    end
+  end
+
   ## inline queries
   defp process(%{inline_query: %{id: query_id, query: ""}}) do
     Nadia.answer_inline_query(query_id, plain_d10(), [cache_time: 0])
@@ -81,12 +92,26 @@ defmodule Roller.Tgbot do
   end
 
   ## helpers
-  defp process_roll_command(chat_id, message_id, str, again) do
-    with " " <> str_num  <- str,
-         {num, ""} <- str_num |> String.trim |> Integer.parse do
+  defp process_roll_command(chat_id, message_id, str, default_again) do
+    with " " <> str <- str,
+         {num, again} <- parse_num_again(str, default_again) do
       Nadia.send_message(chat_id, Roller.roll(num, again), [reply_to_message_id: message_id, parse_mode: "Markdown"])
     else
-      _ -> Nadia.send_message(chat_id, "what?", [reply_to_message_id: message_id, parse_mode: "Markdown"])
+      _ ->
+        rows = 10 .. 9 |> Enum.map(
+          fn(again) ->
+            4 .. 6 |> Enum.map(
+              fn(num) ->
+                %Nadia.Model.InlineKeyboardButton{
+                  callback_data: "#{num}a#{again}",
+                  text: "#{num}" <> (if again != 10, do: "-#{again}", else: "")
+                }
+              end
+            )
+          end
+        )
+        inline_keyboard = %Nadia.Model.InlineKeyboardMarkup{inline_keyboard: rows}
+        Nadia.send_message(chat_id, "🎲", [reply_to_message_id: message_id, parse_mode: "Markdown", reply_markup: inline_keyboard])
     end
   end
 
@@ -119,5 +144,17 @@ defmodule Roller.Tgbot do
   end
 
   def plain_d10(), do: [inline_item(1, "roll 1d10", "plain", Roller.roll())]
+
+  defp parse_num_again(str, default_again \\ 10) do
+    case Integer.parse(str) do
+      {num, ""} when num <= 50 -> {num, default_again}
+      {num, "a" <> str} ->
+        case Integer.parse(str) do
+          {again, ""} when again >= 7 -> {num, again}
+          _ -> :error
+        end
+      _ -> :error
+    end
+  end
 
 end
